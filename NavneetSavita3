@@ -1,0 +1,247 @@
+HTML----------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Form and Employee List</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Registration Form -->
+    <section class="form-container">
+      <h2>Register</h2>
+      <form id="registerForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required>
+        
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+        
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+        
+        <button type="submit">Register</button>
+      </form>
+      <p id="statusMessage"></p>
+    </section>
+
+    <!-- Display New Employee Details -->
+    <section class="new-employee-details">
+      <h3>Newly Registered Employee</h3>
+      <div id="newEmployeeCard" class="employee-card"></div>
+    </section>
+
+    <!-- Employee List -->
+    <section class="employee-list">
+      <h2>Employee List</h2>
+      <div id="employeeGrid" class="grid"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+CSS------------------------------
+* {
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+  }
+  
+  .container {
+    width: 80%;
+    margin: 20px auto;
+  }
+  
+  h2 {
+    text-align: center;
+  }
+  
+  .form-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  label {
+    font-weight: bold;
+  }
+  
+  input {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  .status-message {
+    color: green;
+  }
+  
+  .new-employee-details {
+    background-color: #fff;
+    padding: 20px;
+    margin-top: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .employee-card {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .employee-card h3 {
+    font-size: 1.2rem;
+    margin: 10px 0;
+  }
+  
+  .employee-card p {
+    margin: 5px 0;
+  }
+  
+  .employee-list {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  Javascript---------------------
+// Create an object to handle API interactions and form submission
+class App {
+    constructor() {
+      this.statusMessage = document.getElementById("statusMessage");
+      this.registerForm = document.getElementById("registerForm");
+      this.employeeGrid = document.getElementById("employeeGrid");
+      this.newEmployeeCard = document.getElementById("newEmployeeCard");
+  
+      // Bind event listeners
+      this.registerForm.addEventListener("submit", this.handleFormSubmit.bind(this));
+  
+      // Fetch employee list on page load
+      this.fetchEmployees();
+    }
+  
+    // Fetch employee data from the API (GET request)
+    async fetchEmployees() {
+      try {
+        const response = await fetch("https://jsonplaceholder.typicode.com/users");
+        const employees = await response.json(); // Parse the JSON response
+        this.displayEmployees(employees); // Display the employee data
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        this.employeeGrid.innerHTML = `<p>Error loading employee data.</p>`;
+      }
+    }
+  
+    // Display employees in a grid format
+    displayEmployees(employees) {
+      this.employeeGrid.innerHTML = ""; // Clear previous content
+  
+      employees.forEach((employee) => {
+        const employeeCard = document.createElement("div");
+        employeeCard.classList.add("employee-card");
+  
+        // Create the HTML structure for each employee card
+        employeeCard.innerHTML = `
+          <h3>${employee.name}</h3>
+          <p>Email: ${employee.email}</p>
+          <p>Phone: ${employee.phone}</p>
+          <p>Website: ${employee.website}</p>
+        `;
+  
+        // Append the card to the grid
+        this.employeeGrid.appendChild(employeeCard);
+      });
+    }
+  
+    // Handle form submission (POST request)
+    async handleFormSubmit(event) {
+      event.preventDefault();
+  
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+  
+      const userData = { name, email, password };
+  
+      try {
+        const response = await fetch("https://jsonplaceholder.typicode.com/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
+        });
+  
+        if (response.ok) {
+          this.statusMessage.textContent = "User registered successfully!";
+          this.statusMessage.style.color = "green";
+  
+          // Display the newly registered employee details
+          const newEmployee = await response.json();
+          this.displayNewEmployee(newEmployee);
+        } else {
+          this.statusMessage.textContent = "Failed to register user.";
+          this.statusMessage.style.color = "red";
+        }
+      } catch (error) {
+        this.statusMessage.textContent = "Error: " + error.message;
+        this.statusMessage.style.color = "red";
+      }
+    }
+  
+    // Display the newly registered employee details
+    displayNewEmployee(employee) {
+      this.newEmployeeCard.innerHTML = `
+        <h3>${employee.name}</h3>
+        <p>Email: ${employee.email}</p>
+        <p>Phone: ${employee.phone}</p>
+        <p>Website: ${employee.website}</p>
+      `;
+    }
+  }
+  
+  // Initialize the app when the page loads
+  window.onload = () => {
+    new App();
+  };
+  
